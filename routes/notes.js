@@ -1,29 +1,33 @@
 var express = require('express');
 var router = express.Router();
-// レスポンスのデータ（ノート全件）
-const responseObjectDataAll = {
-textObject1 : {
-id: 1,
-title: 'ノート１のタイトルです',
-subTitle: 'ノート１のサブタイトルです',
-bodyText: 'ノート１の本文です'
-},
-textObject2 : {
-id: 2,
-title: 'ノート２のタイトルです',
-subTitle: 'ノート２のサブタイトルです',
-bodyText: 'ノート２の本文です'
-},
-};
-/**
-*メモを全件取得するAPI
-*@returns {Object[]} data
-*@returns {number} data.id - ID
-*@returns {string} data.title - タイトル
-*@returns {string} data.text - 内容
-*/
-router.get('/', function (req, res, next) {
-// 全件取得して返す
-res.json(responseObjectDataAll);
-})
+const { MongoClient } = require("mongodb");
+
+const uri = "";
+const client = new MongoClient(uri);
+
+router.get('/', async (req, res) => {
+  try {
+    // クライアント接続を確認
+    await client.connect();
+
+    // データベースとコレクションを指定
+    const database = client.db('notes');
+    const notes = database.collection('notes');
+
+    // クエリ条件を指定
+    const query = { id: 2 };
+    const note = await notes.findOne(query);
+
+    // データをレスポンスとして返す
+    res.json(note);
+  } catch (error) {
+    // エラー処理
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  } finally {
+    // クライアント接続を閉じる
+    await client.close();
+  }
+});
+
 module.exports = router;
